@@ -13,36 +13,23 @@ public class ReflectionHelper {
     private ReflectionHelper() {
     }
 
-    public static <C, T> void setStaticField(Class<C> clazz, String fieldName, T fieldValue)
-            throws NoSuchFieldException, IllegalAccessException {
-        setField(clazz, null, fieldName, fieldValue);
-    }
-
-    public static <C, T> void setInstanceField(Class<C> clazz, C instance, String fieldName, T fieldValue)
-            throws NoSuchFieldException, IllegalAccessException {
-        if (instance == null) {
-            throw new IllegalArgumentException("Instance Should not be null");
-        }
-        setField(clazz, instance, fieldName, fieldValue);
-    }
-
-    public static <C, T> T getInstanceField(Class<C> clazz, C instance, String fieldName, Class<T> fieldValueClazz)
-            throws NoSuchFieldException, IllegalAccessException {
+    public static <C, T> T getInstanceField(Class<C> clazz, C instance, String fieldName,
+            Class<T> fieldValueClazz) throws NoSuchFieldException, IllegalAccessException {
         if (instance == null) {
             throw new IllegalArgumentException("Instance Should not be null");
         }
         return getField(clazz, instance, fieldName, fieldValueClazz);
     }
 
-    public static <C, T> T getStaticField(Class<C> clazz, String fieldName, Class<T> fieldValueClazz)
-            throws NoSuchFieldException, IllegalAccessException {
+    public static <C, T> T getStaticField(Class<C> clazz, String fieldName,
+            Class<T> fieldValueClazz) throws NoSuchFieldException, IllegalAccessException {
         return getField(clazz, null, fieldName, fieldValueClazz);
     }
 
-    private static <C, T> T getField(Class<C> clazz, C instance, String fieldName, Class<T> fieldValueClazz)
-            throws NoSuchFieldException, IllegalAccessException {
+    private static <C, T> T getField(Class<C> clazz, C instance, String fieldName,
+            Class<T> fieldValueClazz) throws NoSuchFieldException, IllegalAccessException {
         Field field = clazz.getDeclaredField(fieldName);
-        field.setAccessible(true);
+        field.setAccessible(Boolean.TRUE);
         Object fieldValue = null;
         if (isStatic(field.getModifiers())) {
             fieldValue = field.get(clazz);
@@ -52,18 +39,32 @@ public class ReflectionHelper {
         return fieldValueClazz.cast(fieldValue);
     }
 
-    private static <C, T> void setField(Class<C> clazz, C instance, String fieldName, T fieldValue)
-            throws NoSuchFieldException, IllegalAccessException {
+    public static <C, T> void setStaticField(Class<C> clazz, String fieldName,
+            T fieldValue) throws NoSuchFieldException, IllegalAccessException {
+        setField(clazz, null, fieldName, fieldValue);
+    }
+
+    public static <C, T> void setInstanceField(Class<C> clazz, C instance, String fieldName,
+            T fieldValue) throws NoSuchFieldException, IllegalAccessException {
+        if (instance == null) {
+            throw new IllegalArgumentException("Instance Should not be null");
+        }
+        setField(clazz, instance, fieldName, fieldValue);
+    }
+
+    private static <C, T> void setField(Class<C> clazz, C instance, String fieldName,
+            T fieldValue) throws NoSuchFieldException, IllegalAccessException {
         Field field = clazz.getDeclaredField(fieldName);
-        field.setAccessible(true);
+        field.setAccessible(Boolean.TRUE);
         if (isFinal(field.getModifiers())) {
             Field modifierField = Field.class.getDeclaredField(MODIFIER_FIELD_NAME);
-            modifierField.set(field, field.getModifiers() & ~Modifier.FINAL);
+            modifierField.setAccessible(Boolean.TRUE);
+            modifierField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
         }
         if (isStatic(field.getModifiers())) {
-            field.set(instance, fieldValue);
-        } else {
             field.set(clazz, fieldValue);
+        } else {
+            field.set(instance, fieldValue);
         }
     }
 
